@@ -20,7 +20,7 @@ Every time you visit Amazon, it will open in its own container, separate from ot
 
 We’ve made it easy to take steps to protect your privacy so you can go on with your day.
 
-1. ~~[Install Amazon Container](https://addons.mozilla.org/firefox/addon/)~~.
+1. [Install Amazon Container](https://addons.mozilla.org/firefox/addon/contain-amazon/).
 2. Log out of Amazon and restart Firefox.
 2. Open Amazon and use it like you normally would.  Firefox will automatically switch to the Amazon Container tab for you.
 3. If you click on a link to a page outside of Amazon or type in another website in the address bar, Firefox will load them outside of the Amazon Container
