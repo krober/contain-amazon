@@ -1,0 +1,37 @@
+{
+    "manifest_version": 2,
+    "name": "Amazon Container",
+    "version": "1.0.0",
+
+    "description": "Amazon Container isolates your Amazon activity from the rest of your web activity in order to prevent Amazon from tracking you outside of the Amazon ecosystem via third party cookies.",
+
+    "icons": {
+        "48": "icon.svg",
+        "96": "icon.svg"
+    },
+
+    "applications": {
+      "gecko": {
+        "id": "@contain-amazon",
+        "strict_min_version": "57.0"
+      }
+    },
+
+    "homepage_url": "https://github.com/krober/contain-amazon",
+
+    "permissions": [
+        "<all_urls>",
+        "browsingData",
+        "contextualIdentities",
+        "cookies",
+        "management",
+        "storage",
+        "tabs",
+        "webRequestBlocking",
+        "webRequest"
+    ],
+
+    "background": {
+        "scripts": ["background.js"]
+    }
+}

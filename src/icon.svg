@@ -1,0 +1,27 @@
+<svg id="Contain-Amazon-Icon" 
+     data-name="Contain-Amazon-Icon" 
+     xmlns="http://www.w3.org/2000/svg" 
+     viewBox="0 0 128 128">
+  <defs>
+    <style>
+      .cls-1{
+        fill:#fff;
+      }
+      .cls-2{
+        fill:#f90;
+        fill-rule:evenodd;
+      }
+    </style>
+  </defs>
+  <title>Contain-Amazon-Icon</title>
+  <path d="M113,2.71v0a18,18,0,0,0-5-.7H20A18,18,0,0,0,2,20v88a18,18,0,0,0,18,18H50.4v0h1.73v0H108a18,18,0,0,0,18-18V20A18,18,0,0,0,113,2.71Z"/>
+  <path class="cls-1" d="M58,52V34l-6-6-6,6V59.21a101.45,101.45,0,0,0,12,1.42Z"/>
+  <path class="cls-1" d="M46,100H58V80q-6-.3-12-1.2Z"/>
+  <path class="cls-1" d="M22,100H34V76.39a123.92,123.92,0,0,1-12-3.72Z"/>
+  <path class="cls-1" d="M34,56.32V34l-6-6-6,6V51.87l2.49,1C27.62,54.2,30.8,55.34,34,56.32Z"/>
+  <path class="cls-1" d="M106,51.87V34l-6-6-6,6V56.32c3.2-1,6.38-2.12,9.51-3.42Z"/>
+  <path class="cls-1" d="M94,100h12V72.67a123.92,123.92,0,0,1-12,3.72Z"/>
+  <path class="cls-1" d="M70,100H82V78.81q-6,.9-12,1.2Z"/>
+  <path class="cls-1" d="M82,52V34l-6-6-6,6V60.63a101.45,101.45,0,0,0,12-1.42Z"/>
+  <path class="cls-2" d="M105.43,57.52a107.52,107.52,0,0,1-82.86,0L22,57.28V67.34a117.26,117.26,0,0,0,42,7.82,117.26,117.26,0,0,0,42-7.82V57.28Z"/>
+</svg>
