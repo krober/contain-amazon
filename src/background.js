@@ -2,36 +2,8 @@
 const AMAZON_CONTAINER_NAME = "Amazon";
 const AMAZON_CONTAINER_COLOR = "orange";
 const AMAZON_CONTAINER_ICON = "briefcase";
-const AMAZON_DOMAINS = [
-  "abebooks.com",
-  "www.abebooks.com",
 
-  "alexa.com",
-  "www.alexa.com",
-
-  "amazon.com", 
-  "www.amazon.com",
-
-  "amzn.to",
-
-  "audible.com",
-  "www.audible.com",
-  
-  "boxofficemojo.com",
-  "www.boxofficemojo.com",
-
-  "goodreads.com",
-  "www.goodreads.com",
-
-  "imdb.com",
-  "www.imdb.com",
-
-  "twitch.com",
-  "www.twitch.com",
-
-  "zappos.com",
-  "www.zappos.com",
-
+const AMAZON_NATIONAL_DOMAINS = [
   "amazon.cn",
   "amazon.in",
   "amazon.co.jp",
@@ -48,6 +20,83 @@ const AMAZON_DOMAINS = [
   "amazon.com.au",
   "amazon.com.br"
 ];
+
+const AMAZON_TLD_DOMAINS = [
+  "amazon.clothing",
+  "amazon.com",
+  "amazon.company",
+  "amazon.cruises",
+  "amazon.dog",
+  "amazon.energy",
+  "amazon.express",
+  "amazon.fund",
+  "amazon.game",
+  "amazon.gd",
+  "amazon.gent",
+  "amazon.hockey",
+  "amazon.international",
+  "amazon.jobs",
+  "amazon.kiwi",
+  "amazon.ltda",
+  "amazon.press",
+  "amazon.re",
+  "amazon.salon",
+  "amazon.shopping",
+  "amazon.soccer",
+  "amazon.tickets",
+  "amazon.tienda",
+  "amazon.tours",
+  "amazon.training",
+  "amazon.tv",
+  "amazon.wiki"
+];
+
+const AMAZON_SERVICES_DOMAINS = [
+  "aboutamazon.com",
+  "alexa.com",
+  "amazoninspire.com",
+  "amazonpay.in",
+  "amazonteam.org",
+  "amzn.to",
+  "audible.com",
+  "awscloud.com",
+  "awsevents.com",
+  "primevideo.com",
+  "twitch.com",
+  "twitch.tv"
+];
+
+let AMAZON_DOMAINS = [
+  "6pm.com",
+  "abebooks.com",
+  "acx.com",
+  "bookdepository.com",
+  "boxofficemojo.com",
+  "comixology.com",
+  "createspace.com",
+  "dpreview.com",
+  "eastdane.com",
+  "fabric.com",
+  "goodreads.com",
+  "imdb.com",
+  "junglee.com",
+  "lab126.com",
+  "mturk.com",
+  "seattlespheres.com",
+  "shopbop.com",
+  "souq.com",
+  "tenmarks.com",
+  "wholefoodsmarket.com",
+  "withoutabox.com",
+  "woot.com",
+  "zappos.com"
+];
+
+AMAZON_DOMAINS = AMAZON_DOMAINS.concat(
+  AMAZON_NATIONAL_DOMAINS, 
+  AMAZON_TLD_DOMAINS, 
+  AMAZON_SERVICES_DOMAINS
+);
 
 const MAC_ADDON_ID = "@testpilot-containers";
 

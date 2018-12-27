@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
     "name": "Amazon Container",
-    "version": "1.0.0",
+    "version": "1.0.1",
 
     "description": "Amazon Container isolates your Amazon activity from the rest of your web activity in order to prevent Amazon from tracking you outside of the Amazon ecosystem via third party cookies.",
 
@@ -12,7 +12,7 @@
 
     "applications": {
       "gecko": {
-        "id": "@contain-amazon",
+        "id": "@contain-amzn",
         "strict_min_version": "57.0"
       }
     },
