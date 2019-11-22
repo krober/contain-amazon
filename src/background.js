@@ -51,6 +51,18 @@ const AMAZON_TLD_DOMAINS = [
   "amazon.wiki"
 ];
 
+const AUDIBLE_DOMAINS = [
+    "audible.com",
+    "audible.co.uk",
+    "audible.fr",
+    "audible.com.au",
+    "audible.de",
+    "audible.it",
+    "audible.ca",
+    "audible.in",
+    "audible.co.jp"
+];
+
 const AMAZON_SERVICES_DOMAINS = [
   "aboutamazon.com",
   "alexa.com",
@@ -58,7 +70,6 @@ const AMAZON_SERVICES_DOMAINS = [
   "amazonpay.in",
   "amazonteam.org",
   "amzn.to",
-  "audible.com",
   "awscloud.com",
   "awsevents.com",
   "primevideo.com",
@@ -95,6 +106,7 @@ let AMAZON_DOMAINS = [
 AMAZON_DOMAINS = AMAZON_DOMAINS.concat(
   AMAZON_NATIONAL_DOMAINS, 
   AMAZON_TLD_DOMAINS, 
+  AUDIBLE_DOMAINS,
   AMAZON_SERVICES_DOMAINS
 );
 
