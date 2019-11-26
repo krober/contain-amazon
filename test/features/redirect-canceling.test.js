@@ -13,13 +13,14 @@ describe("Redirect Canceling", () => {
         url: "http://amazon.com"
       }, {
         options: {
-          webRequestRedirects: ["https://www.amazon.com"]
+          webRequestRedirects: ["https://www.amazon.com"],
+          instantRedirects: true
         },
         responses
       });
 
       const result1 = await responses.webRequest.onBeforeRequest[0];
-      const result2 = await responses.webRequest.onBeforeRequest[1];
+      const result2 = await responses.webRequest.onBeforeRequest[2];
       expect(result1).to.deep.equal({
         cancel: true
       });
@@ -56,9 +57,9 @@ describe("Redirect Canceling", () => {
     it("should not open two tabs", async () => {
       await redirectedRequest();
       const result1 = await responses.webRequest.onBeforeRequest[0];
-      const result2 = await responses.webRequest.onBeforeRequest[1];
-      const result3 = await responses.webRequest.onBeforeRequest[2];
-      const result4 = await responses.webRequest.onBeforeRequest[3];
+      const result2 = await responses.webRequest.onBeforeRequest[2];
+      const result3 = await responses.webRequest.onBeforeRequest[4];
+      const result4 = await responses.webRequest.onBeforeRequest[6];
       expect(result1).to.deep.equal({
         cancel: true
       });

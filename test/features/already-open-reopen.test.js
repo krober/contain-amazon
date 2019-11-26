@@ -60,39 +60,17 @@ describe("Already Open Reopen", () => {
     it("should wait for still loading tabs and then reopen them", async () => {
       expect(background.browser.tabs.create).to.not.have.been.called;
       tab.url = "https://www.amazon.com";
-      const [promise] = background.browser.tabs.onUpdated.addListener.yield(tab.id, {
+      background.browser.tabs.onUpdated.addListener.yield(tab.id, {
         url: tab.url,
         status: "complete"
       }, tab);
-      await promise;
+      await new Promise(setTimeout);
 
       expect(background.browser.tabs.create).to.have.been.calledWithMatch({
         url: "https://www.amazon.com",
         cookieStoreId: amazonContainer.cookieStoreId
       });
       expect(background.browser.tabs.create).to.have.been.calledOnce;
-    });
-  });
-
-  describe("Add-on initializes with already open but incognito Tab", () => {
-    beforeEach(async () => {
-      webExtension = await loadWebExtension({
-        async beforeParse(window) {
-          amazonContainer = await window.browser.contextualIdentities._create({
-            name: "Amazon"
-          });
-          await window.browser.tabs._create({
-            url: "https://dontreopenincognito.me",
-            cookieStoreId: amazonContainer.cookieStoreId,
-            incognito: true
-          });
-        }
-      });
-      background = webExtension.background;
-    });
-
-    it("should not reopen", async () => {
-      expect(background.browser.tabs.create).to.not.have.been.calledOnce;
     });
   });
 

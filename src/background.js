@@ -1,7 +1,9 @@
 // Param values from https://developer.mozilla.org/Add-ons/WebExtensions/API/contextualIdentities/create
-const AMAZON_CONTAINER_NAME = "Amazon";
-const AMAZON_CONTAINER_COLOR = "orange";
-const AMAZON_CONTAINER_ICON = "briefcase";
+const AMAZON_CONTAINER_DETAILS = {
+  name: "Amazon",
+  color: "orange",
+  icon: "briefcase"
+};
 
 const AMAZON_NATIONAL_DOMAINS = [
   "amazon.cn",
@@ -53,15 +55,15 @@ const AMAZON_TLD_DOMAINS = [
 ];
 
 const AUDIBLE_DOMAINS = [
-    "audible.com",
-    "audible.co.uk",
-    "audible.fr",
-    "audible.com.au",
-    "audible.de",
-    "audible.it",
-    "audible.ca",
-    "audible.in",
-    "audible.co.jp"
+  "audible.com",
+  "audible.co.uk",
+  "audible.fr",
+  "audible.com.au",
+  "audible.de",
+  "audible.it",
+  "audible.ca",
+  "audible.in",
+  "audible.co.jp"
 ];
 
 const AMAZON_SERVICES_DOMAINS = [
@@ -118,6 +120,8 @@ let amazonCookieStoreId = null;
 
 const canceledRequests = {};
 const tabsWaitingToLoad = {};
+const tabStates = {};
+
 const amazonHostREs = [];
 
 async function isMACAddonEnabled () {
@@ -292,28 +296,61 @@ async function clearAmazonCookies () {
 
 async function setupContainer () {
   // Use existing Amazon container, or create one
-  const contexts = await browser.contextualIdentities.query({name: AMAZON_CONTAINER_NAME});
+
+  const info = await browser.runtime.getBrowserInfo();
+  if (parseInt(info.version) < 67) {
+    AMAZON_CONTAINER_DETAILS.color = "orange";
+    AMAZON_CONTAINER_DETIALS.color = "briefcase";
+  }
+
+  const contexts = await browser.contextualIdentities.query({name: AMAZON_CONTAINER_DETAILS.name});
   if (contexts.length > 0) {
-    amazonCookieStoreId = contexts[0].cookieStoreId;
+    const amazonContext = contexts[0];
+    amazonCookieStoreId = amazonContext.cookieStoreId;
+    if (amazonContext.color !== AMAZON_CONTAINER_DETAILS.color ||
+        amazonContext.icon !== AMAZON_CONTAINER_DETAILS.icon) {
+          await browser.contextualIdentities.update(
+            amazonCookieStoreId,
+            { color: AMAZON_CONTAINER_DETAILS.color, icon: AMAZON_CONTAINER_DETAILS.icon }
+          );
+    }
   } else {
-    const context = await browser.contextualIdentities.create({
-      name: AMAZON_CONTAINER_NAME,
-      color: AMAZON_CONTAINER_COLOR,
-      icon: AMAZON_CONTAINER_ICON
-    });
+    const context = await browser.contextualIdentities.create(AMAZON_CONTAINER_DETAILS);
     amazonCookieStoreId = context.cookieStoreId;
+  }
+
+  const azcStorage = await browser.storage.local.get();
+  if (!azcStorage.domainsAddedToAmazonContainer) {
+    await browser.storage.local.set({ "domainsAddedToAmazonContainer": [] });
   }
 }
 
-function reopenTab ({url, tab, cookieStoreId}) {
-  browser.tabs.create({
+async function maybeReopenTab(url, tab, request) {
+  const macAssigned = await getMACAssignment(url);
+  if (macAssigned) {
+    return;
+  }
+
+  const cookieStoreId = await shouldContainInto(url, tab);
+  if (!cookieStoreId) {
+    return;
+  }
+
+  if (request && shouldCancelEarly(tab, request)) {
+    return { cancel: true };
+  }
+
+  await browser.tabs.create({
     url,
     cookieStoreId,
     active: tab.active,
     index: tab.index,
     windowId: tab.windowId
   });
+
   browser.tabs.remove(tab.id);
+
+  return { cancel: true };
 }
 
 function isAmazonURL (url) {
@@ -326,13 +363,44 @@ function isAmazonURL (url) {
   return false;
 }
 
-function shouldContainInto (url, tab) {
+async function supportsSiteSubdomainCheck(url) {
+  // No subdomains to check at this time
+  return;
+}
+
+async function addDomainToAmazonContainer (url) {
+  const parsedUrl = new URL(url);
+  const azcStorage = await browser.storage.local.get();
+  azcStorage.domainsAddedToAmazonContainer.push(parsedUrl.host);
+  await browser.storage.local.set({"domainsAddedToAmazonContainer": azcStorage.domainsAddedToAmazonContainer});
+  await supportSiteSubdomainCheck(parsedUrl.host);
+}
+
+async function removeDomainFromAmazonContainer (domain) {
+  const azcStorage = await browser.storage.local.get();
+  const domainIndex = azcStorage.domainsAddedToAmazonContainer.indexOf(domain);
+  azcStorage.domainsAddedToAmazonContainer.splice(domainIndex, 1);
+  await browser.storage.local.set({"domainsAddedToAmazonContainer": azcStorage.domainsAddedToAmazonContainer});
+}
+
+async function isAddedToAmazonContainer (url) {
+  const parsedUrl = new URL(url);
+  const azcStorage = await browser.storage.local.get();
+  if (azcStorage.domainsAddedToAmazonContainer.includes(parsedUrl.host)) {
+    return true;
+  }
+  return false;
+}
+
+async function shouldContainInto (url, tab) {
   if (!url.startsWith("http")) {
     // we only handle URLs starting with http(s)
     return false;
   }
 
-  if (isAmazonURL(url)) {
+  const hasBeenAddedToAmazonContainer = await isAddedToAmazonContainer(url);
+
+  if (isAmazonURL(url) || hasBeenAddedToAmazonContainer) {
     if (tab.cookieStoreId !== amazonCookieStoreId) {
       // Amazon-URL outside of Amazon Container Tab
       // Should contain into Amazon Container
@@ -348,29 +416,11 @@ function shouldContainInto (url, tab) {
 }
 
 async function maybeReopenAlreadyOpenTabs () {
-  const maybeReopenTab = async tab => {
-    const macAssigned = await getMACAssignment(tab.url);
-    if (macAssigned) {
-      // We don't reopen MAC assigned urls
-      return;
-    }
-    const cookieStoreId = shouldContainInto(tab.url, tab);
-    if (!cookieStoreId) {
-      // Tab doesn't need to be contained
-      return;
-    }
-    reopenTab({
-      url: tab.url,
-      tab,
-      cookieStoreId
-    });
-  };
-
   const tabsOnUpdated = (tabId, changeInfo, tab) => {
     if (changeInfo.url && tabsWaitingToLoad[tabId]) {
       // Tab we're waiting for switched it's url, maybe we reopen
       delete tabsWaitingToLoad[tabId];
-      maybeReopenTab(tab);
+      maybeReopenTab(tab.url, tab);
     }
     if (tab.status === "complete" && tabsWaitingToLoad[tabId]) {
       // Tab we're waiting for completed loading
@@ -385,9 +435,6 @@ async function maybeReopenAlreadyOpenTabs () {
   // Query for already open Tabs
   const tabs = await browser.tabs.query({});
   tabs.map(async tab => {
-    if (tab.incognito) {
-      return;
-    }
     if (tab.url === "about:blank") {
       if (tab.status !== "loading") {
         return;
@@ -404,65 +451,150 @@ async function maybeReopenAlreadyOpenTabs () {
       }
     } else {
       // Tab already has an url, maybe we reopen
-      maybeReopenTab(tab);
+      maybeReopenTab(tab.url, tab);
     }
   });
 }
 
-function stripFbclid(url) {
+function stripAzclid(url) {
   const strippedUrl = new URL(url);
-  strippedUrl.searchParams.delete("fbclid");
+  strippedUrl.searchParams.delete("azclid");
   return strippedUrl.href;
 }
 
-async function containAmazon (options) {
-  const url = new URL(options.url);
+async function getActiveTab () {
+  const [activeTab] = await browser.tabs.query({currentWindow: true, active: true});
+  return activeTab;
+}
+
+async function windowFocusChangedListener (windowId) {
+  if (windowId !== browser.windows.WINDOW_ID_NONE) {
+    const activeTab = await getActiveTab();
+    updateBrowserActionIcon(activeTab);
+  }
+}
+
+function tabUpdateListener (tabId, changeInfo, tab) {
+  updateBrowserActionIcon(tab);
+}
+
+async function updateBrowserActionIcon (tab) {
+
+  browser.browserAction.setBadgeText({text: ""});
+
+  const url = tab.url;
+  const hasBeenAddedToAmazonContainer = await isAddedToAmazonContainer(url);
+
+  if (isAmazonURL(url)) {
+    browser.storage.local.set({"CURRENT_PANEL": "on-amazon"});
+    browser.browserAction.setPopup({tabId: tab.id, popup: "./panel.html"});
+  } else if (hasBeenAddedToAmazonContainer) {
+    browser.storage.local.set({"CURRENT_PANEL": "in-azc"});
+  } else {
+    const tabState = tabStates[tab.id];
+    const panelToShow = (tabState && tabState.trackersDetected) ? "trackers-detected" : "no-trackers";
+    browser.storage.local.set({"CURRENT_PANEL": panelToShow});
+    browser.browserAction.setPopup({tabId: tab.id, popup: "./panel.html"});
+    browser.browserAction.setBadgeBackgroundColor({color: "#A44D00"});
+    if ( panelToShow === "trackers-detected" ) {
+      browser.browserAction.setBadgeText({text: "!"});
+    }
+  }
+}
+
+async function containAmazon (request) {
+  if (tabsWaitingToLoad[request.tabId]) {
+    // Cleanup just to make sure we don't get a race-condition with startup reopening
+    delete tabsWaitingToLoad[request.tabId];
+  }
+
+  const tab = await browser.tabs.get(request.tabId);
+
+  updateBrowserActionIcon(tab);
+
+  const url = new URL(request.url);
   const urlSearchParm = new URLSearchParams(url.search);
-  if (urlSearchParm.has("fbclid")) {
-    return {redirectUrl: stripFbclid(options.url)};
+  if (urlSearchParm.has("azclid")) {
+    return {redirectUrl: stripAzclid(request.url)};
   }
   // Listen to requests and open Amazon into its Container,
   // open other sites into the default tab context
-  if (options.tabId === -1) {
+  if (request.tabId === -1) {
     // Request doesn't belong to a tab
     return;
   }
-  if (tabsWaitingToLoad[options.tabId]) {
-    // Cleanup just to make sure we don't get a race-condition with startup reopening
-    delete tabsWaitingToLoad[options.tabId];
+
+  return maybeReopenTab(request.url, tab, request);
+}
+
+// Lots of this is borrowed from old blok code:
+// https://github.com/mozilla/blok/blob/master/src/js/background.js
+async function blockAmazonSubResources (requestDetails) {
+  if (requestDetails.type === "main_frame") {
+    return {};
   }
 
-  // We have to check with every request if the requested URL is assigned with MAC
-  // because the user can assign URLs at any given time (needs MAC Events)
-  const macAssigned = await getMACAssignment(options.url);
-  if (macAssigned) {
-    // This URL is assigned with MAC, so we don't handle this request
-    return;
+  if (typeof requestDetails.originUrl === "undefined") {
+    return {};
   }
 
-  const tab = await browser.tabs.get(options.tabId);
-  if (tab.incognito) {
-    // We don't handle incognito tabs
-    return;
+  const urlIsAmazon = isAmazonURL(requestDetails.url);
+  const originUrlIsAmazon = isAmazonURL(requestDetails.originUrl);
+
+  if (!urlIsAmazon) {
+    return {};
   }
 
-  // Check whether we should contain this request into another container
-  const cookieStoreId = shouldContainInto(options.url, tab);
-  if (!cookieStoreId) {
-    // Request doesn't need to be contained
-    return;
+  if (originUrlIsAmazon) {
+    const message = {msg: "amazon-domain"};
+    // Send the message to the content_script
+    browser.tabs.sendMessage(requestDetails.tabId, message);
+    return {};
   }
-  if (shouldCancelEarly(tab, options)) {
-    // We need to cancel early to prevent multiple reopenings
-    return {cancel: true};
+
+  const hasBeenAddedToAmazonContainer = await isAddedToAmazonContainer(requestDetails.originUrl);
+
+  if (urlIsAmazon && !originUrlIsAmazon) {
+    if (!hasBeenAddedToAmazonContainer ) {
+      const message = {msg: "blocked-amazon-subresources"};
+      // Send the message to the content_script
+      browser.tabs.sendMessage(requestDetails.tabId, message);
+
+      tabStates[requestDetails.tabId] = { trackersDetected: true };
+      return {cancel: true};
+    } else {
+      const message = {msg: "allowed-amazon-subresources"};
+      // Send the message to the content_script
+      browser.tabs.sendMessage(requestDetails.tabId, message);
+      return {};
+    }
   }
-  // Decided to contain
-  reopenTab({
-    url: options.url,
-    tab,
-    cookieStoreId
-  });
-  return {cancel: true};
+  return {};
+}
+
+function setupWebRequestListeners() {
+  browser.webRequest.onCompleted.addListener((options) => {
+    if (canceledRequests[options.tabId]) {
+      delete canceledRequests[options.tabId];
+    }
+  },{urls: ["<all_urls>"], types: ["main_frame"]});
+  browser.webRequest.onErrorOccurred.addListener((options) => {
+    if (canceledRequests[options.tabId]) {
+      delete canceledRequests[options.tabId];
+    }
+  },{urls: ["<all_urls>"], types: ["main_frame"]});
+
+  // Add the main_frame request listener
+  browser.webRequest.onBeforeRequest.addListener(containAmazon, {urls: ["<all_urls>"], types: ["main_frame"]}, ["blocking"]);
+
+  // Add the sub-resource request listener
+  browser.webRequest.onBeforeRequest.addListener(blockAmazonSubResources, {urls: ["<all_urls>"]}, ["blocking"]);
+}
+
+function setupWindowsAndTabsListeners() {
+  browser.tabs.onUpdated.addListener(tabUpdateListener);
+  browser.tabs.onRemoved.addListener(tabId => delete tabStates[tabId] );
+  browser.windows.onFocusChanged.addListener(windowFocusChangedListener);
 }
 
 (async function init () {
@@ -481,21 +613,21 @@ async function containAmazon (options) {
   }
   clearAmazonCookies();
   generateAmazonHostREs();
+  setupWebRequestListeners();
+  setupWindowsAndTabsListeners();
 
-  // Clean up canceled requests
-  browser.webRequest.onCompleted.addListener((options) => {
-    if (canceledRequests[options.tabId]) {
-      delete canceledRequests[options.tabId];
+  browser.runtime.onMessage.addListener( (message, {url}) => {
+    if (message === "what-sites-are-added") {
+      return browser.storage.local.get().then(azcStorage => azcStorage.domainsAddedToAmazonContainer);
+    } else if (message.removeDomain) {
+      removeDomainFromAmazonContainer(message.removeDomain).then( results => results );
+    } else {
+      addDomainToAmazonContainer(url).then( results => results);
     }
-  },{urls: ["<all_urls>"], types: ["main_frame"]});
-  browser.webRequest.onErrorOccurred.addListener((options) => {
-    if (canceledRequests[options.tabId]) {
-      delete canceledRequests[options.tabId];
-    }
-  },{urls: ["<all_urls>"], types: ["main_frame"]});
-
-  // Add the request listener
-  browser.webRequest.onBeforeRequest.addListener(containAmazon, {urls: ["<all_urls>"], types: ["main_frame"]}, ["blocking"]);
+  });
 
   maybeReopenAlreadyOpenTabs();
+
+  const activeTab = await getActiveTab();
+  updateBrowserActionIcon(activeTab);
 })();
