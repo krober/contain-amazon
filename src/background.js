@@ -66,6 +66,11 @@ const AUDIBLE_DOMAINS = [
   "audible.co.jp"
 ];
 
+const WHOLEFOODS_DOMAINS = [
+  "wholefoodsmarket.com",
+  "wholefoodsmarket.co.uk"
+];
+
 const AMAZON_SERVICES_DOMAINS = [
   "aboutamazon.com",
   "alexa.com",
@@ -100,7 +105,6 @@ let AMAZON_DOMAINS = [
   "shopbop.com",
   "souq.com",
   "tenmarks.com",
-  "wholefoodsmarket.com",
   "withoutabox.com",
   "woot.com",
   "zappos.com"
@@ -110,6 +114,7 @@ AMAZON_DOMAINS = AMAZON_DOMAINS.concat(
   AMAZON_NATIONAL_DOMAINS, 
   AMAZON_TLD_DOMAINS, 
   AUDIBLE_DOMAINS,
+  WHOLEFOODS_DOMAINS,
   AMAZON_SERVICES_DOMAINS
 );
 
