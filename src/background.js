@@ -22,7 +22,8 @@ const AMAZON_NATIONAL_DOMAINS = [
   "amazon.com.au",
   "amazon.com.br",
   "amazon.ae",
-  "amazon.se"
+  "amazon.se",
+  "amazon.sg"
 ];
 
 const AMAZON_TLD_DOMAINS = [
