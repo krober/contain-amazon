@@ -85,7 +85,8 @@ const AMAZON_SERVICES_DOMAINS = [
   "awsevents.com",
   "primevideo.com",
   "twitch.com",
-  "twitch.tv"
+  "twitch.tv",
+  "ext-twitch.tv"
 ];
 
 let AMAZON_DOMAINS = [
