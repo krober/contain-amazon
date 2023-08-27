@@ -1,3 +1,5 @@
+# I am no longer able to maintain this; I am willing to transfer ownership if someone wants it. If you'd like to take it, please open a PR, which removes this note, entitled "Onwership Transfer" (easiest way for me to see requests I think?). I'll check out any requests, pick one to merge (probably first come, first serve), and transfer ownership to that account.
+
 # Amazon Container
 
 **Prevent Amazon from tracking your visits to other websites**
