@@ -30,14 +30,14 @@
     "eslint": "^4.19.1",
     "eslint-plugin-no-unsanitized": "^2.0.2",
     "fs-extra": "^8.1.0",
-    "mocha": "^5.0.5",
+    "mocha": "^10.2.0",
     "nyc": "^14.1.1",
     "sinon": "^7.3.2",
     "sinon-chai": "^3.0.0",
-    "webextensions-geckodriver": "^0.6.1",
+    "webextensions-geckodriver": "^0.7.0",
     "webextensions-jsdom": "^0.15.2"
   },
   "dependencies": {
-    "web-ext": "^3.1.1"
+    "web-ext": "^7.6.2"
   }
 }
